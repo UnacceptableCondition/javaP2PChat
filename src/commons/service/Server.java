@@ -1,33 +1,45 @@
+package commons.service;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import property.PropertyHandler;
+
 import java.io.*;
 import java.net.*;
 
 public class Server {
-    private static final int serverPort  = 6666; // открываемый порт сервера
-    private static final  byte[] serverHost  = new byte[] {127, 0, 0, 6};
 
+    private static int serverPort;
+    private static byte[] serverHost;
     private static UserQueue agentQueue;
     private static UserQueue clientQueue;
+    private static Logger rootLogger;
 
+    private static boolean isRunning = true;
 
     static {
+        PropertyHandler propertyHandler = new PropertyHandler();
+        serverPort = propertyHandler.getServerPort();
+        serverHost = propertyHandler.getServerHost();
         agentQueue = new UserQueue();
         clientQueue = new UserQueue();
+
+        rootLogger = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
     }
 
     public static void main(String[] arg) {
         ServerSocket srvSocket = null;
-        new ConnectionManager().start();
         try {
             try {
                 InetAddress serverAddress = InetAddress.getByAddress(serverHost);
                 srvSocket = new ServerSocket(serverPort, 0, serverAddress);
-                while(true) {
+                while(isRunning) {
                     Socket socket = srvSocket.accept();
-                    System.out.println(socket.getInetAddress() + " " + socket.getPort());
+                    rootLogger.info(socket.getInetAddress() + " " + socket.getPort());
                     new UserRequestHandler().setSocket(socket);
                 }
             } catch(Exception e) {
-                System.out.println("Exception : " + e);
+                rootLogger.error("Exception : " + e);
             }
         } finally {
             try {
@@ -48,8 +60,12 @@ public class Server {
         return clientQueue;
     }
 
+    public static Logger getLogger() {
+        return rootLogger;
+    }
+
     @Override
-    public  void finalize() {
-        ConnectionManager.close();
+    public void finalize() {
+        isRunning = false;
     }
 }

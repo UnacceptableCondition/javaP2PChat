@@ -1,4 +1,4 @@
-import java.net.Socket;
+package commons.service;
 
 public class User {
 

@@ -1,4 +1,7 @@
+package commons.service;
+
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.net.Socket;
 
 public class UserRequestHandler extends Thread {
@@ -21,7 +24,7 @@ public class UserRequestHandler extends Thread {
             String line;
             while(true) {
                 line = dataInputStream.readUTF();
-                if(line.equalsIgnoreCase( "client")) {
+                if(line.equalsIgnoreCase("console")) {
                     Server.getClientQueue().registerUser(
                             socket.getInetAddress().getAddress() ,
                             socket.getPort()
@@ -36,7 +39,15 @@ public class UserRequestHandler extends Thread {
                 break;
             }
         } catch(Exception e) {
-            System.out.println("Exception : " + e);
+            Server.getLogger().error("Exception : " + e);
+//            System.out.println("Exception : " + e);
+        } finally {
+            try {
+                ConnectionManager.checkNewConnection();
+            } catch (IOException e) {
+                Server.getLogger().error("Exception : " + e);
+            }
+
         }
     }
 }
